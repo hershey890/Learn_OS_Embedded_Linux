@@ -2,9 +2,9 @@ SOURCE=src
 TARGET = myDriver
 OUTPUT=bin
 
-SOURCES=$(wildcard $(SOURCE)/*.c)
+SOURCES := $(wildcard $(SOURCE)/*.c)
 
-all: $(OUTPUT) $(subst $(SOURCE),$(OUTPUT),$(SOURCES)) $(OUTPUT)/Makefile
+all: $(OUTPUT) $(subst $(SOURCE),$(OUTPUT),$(wildcard $(SOURCE)/*.c)) $(OUTPUT)/Makefile
 	@make -C /lib/modules/$(shell uname -r)/build M=$(PWD)/$(OUTPUT) modules
 
 # Create a symblink from src to bin
