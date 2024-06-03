@@ -1,6 +1,7 @@
 # My Stuff
 .vscode/
 *.swp
+linux_device_driver/bin/
 
 # Prerequisites
 *.d
