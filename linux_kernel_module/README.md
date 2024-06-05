@@ -1,5 +1,5 @@
 # Implementing a basic Linux Kernel Module Driver
-Based on [this tutorial](https://jvgd.medium.com/how-to-write-a-device-driver-76d0584a4be3).
+Wrote a tutorial documenting how I did this on [Medium](https://medium.com/@hershjoshi/writing-your-first-linux-kernel-module-and-dealing-with-secure-boot-137194174aba)
 
 ## Notes
 * To see where the Linux headers are installed look in `/usr/lib/modules/$(uname -r)/build/include/linux/`
