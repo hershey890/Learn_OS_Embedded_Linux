@@ -2,6 +2,7 @@
 .vscode/
 *.swp
 linux_device_driver/bin/
+build/
 
 # Prerequisites
 *.d
