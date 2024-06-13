@@ -1,6 +1,6 @@
 /* Producer-Consumer problem using only semaphores/mutexes, no conditions/signals
 
-From Tanebaum/Bos Modern Operating Systems 4th ed. pg 131 and 138
+From Tanebaum/Bos Modern Operating Systems 4th ed. pg 128
 
 Resources
 ---------
@@ -23,6 +23,8 @@ pthread_mutex_t mutex;  // controls access to critical region
 sem_t empty;            // counts empty buffer slots
 sem_t full;             // counts full buffer slots
 int *buffer;            // pointer to buffer array of size N
+size_t buf_start;
+size_t buf_end;
 
 
 void consume_item(int *item) {
@@ -37,7 +39,7 @@ void *producer() {
         sem_wait(&empty);               // decrement empty count
         pthread_mutex_lock(&mutex);     // enter critical region
         sem_getvalue(&empty, &idx);     // insert item into buffer
-        buffer[N-idx] = item;
+        buffer[buf_end++ % N] = item;
         pthread_mutex_unlock(&mutex);   // leave critical region
         sem_post(&full);                // increment # full slots
     }
@@ -51,9 +53,9 @@ void *consumer() {
         sem_wait(&full);                // decrement full count
         pthread_mutex_lock(&mutex);     // enter critical region
         sem_getvalue(&full, &idx);      // remove item from buffer
-        item = buffer[idx];
+        item = buffer[buf_start++ % N];
         pthread_mutex_unlock(&mutex);   // leave critical region
-        sem_post(&empty);               // increment # full slots
+        sem_post(&empty);               // increment # empty slots
         consume_item(&item);            // do something with item
     }
     pthread_exit(0);
@@ -62,6 +64,8 @@ void *consumer() {
 
 int main() {
     buffer = (int*)malloc(N*sizeof(int));   // allocate buffer
+    buf_start = 0;
+    buf_end = 0;
     
     /* Init Mutexes, Semaphores, and Threads */
     pthread_t pro, con;
