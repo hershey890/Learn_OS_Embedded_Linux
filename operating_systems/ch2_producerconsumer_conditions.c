@@ -14,51 +14,59 @@ Compiling/Running
 */
 #include <stdio.h>
 #include <pthread.h>
+#include <stdlib.h>
 
-#define MAX 20                  // How many numbers to produce
-pthread_mutex_t mutex;          // controls access to critical region
-pthread_cond_t condc, condp;    // used for signaling
-int buffer = 0;                     
-
+#define MAX 20                  // number of elements to remove from buffer
+#define N 20                     // buffer size
+pthread_mutex_t mutex;
+pthread_cond_t condc, condp;
+int* buffer;
+size_t buf_start, buf_end;
 
 void *producer() {
-    for(int i=1; i<=MAX; i++) {
-        pthread_mutex_lock(&mutex);     // get exclusive access to buffer
-        while(buffer != 0)              
-            pthread_cond_wait(&condp, &mutex); // block until another thread signals to it
-        buffer = i;                     // put item into buffer
-        pthread_cond_signal(&condc);    // wake consumer
-        pthread_mutex_unlock(&mutex);   // release access to buffer
-    }
-    pthread_exit(0);
-}
-
-
-void *consumer() {
-    for(int i=1; i<=MAX; i++) {
-        pthread_mutex_lock(&mutex);     // get exclusive access to buffer
-        while(buffer == 0)
-            pthread_cond_wait(&condc, &mutex);
-        buffer = 0;
-        pthread_cond_signal(&condp);
+    for(int i=0; i<MAX; i++) {
+        pthread_mutex_lock(&mutex);
+        while(buf_end - buf_start == N)
+            pthread_cond_wait(&condp, &mutex);
+        buffer[buf_end++ % N] = i;
+        pthread_cond_signal(&condc);
         pthread_mutex_unlock(&mutex);
     }
     pthread_exit(0);
 }
 
+void *consumer() {
+    int item;
+    for(int i=0; i<MAX; i++) {
+        pthread_mutex_lock(&mutex);
+        while(buf_start == buf_end)
+            pthread_cond_wait(&condc, &mutex);
+        item = buffer[buf_start++ % N];
+        pthread_cond_signal(&condp);
+        pthread_mutex_unlock(&mutex);
 
-int main() {
-    printf("Start\n");
+        printf("C: %d\n", item);
+    }
+    pthread_exit(0);
+}
+
+int main(void) {
+    buffer = (int*)malloc(N*sizeof(int));
+    buf_start = 0;
+    buf_end = 0;
+
     pthread_t pro, con;
-    pthread_mutex_init(&mutex, 0);
-    pthread_cond_init(&condc, 0);
-    pthread_cond_init(&condp, 0);
-    pthread_create(&con, 0, consumer, 0);
-    pthread_create(&pro, 0, producer, 0);
-    pthread_join(pro, 0);
-    pthread_join(con, 0);
-    pthread_cond_destroy(&condc);
+    pthread_mutex_init(&mutex, NULL);
+    pthread_cond_init(&condc, NULL);
+    pthread_cond_init(&condc, NULL);
+
+    pthread_create(&pro, NULL, producer, NULL);
+    pthread_create(&con, NULL, consumer, NULL);
+    pthread_join(con, NULL);
+    pthread_join(pro, NULL);
+
     pthread_cond_destroy(&condp);
+    pthread_cond_destroy(&condc);
     pthread_mutex_destroy(&mutex);
-    printf("Done\n");
+    free(buffer);
 }
