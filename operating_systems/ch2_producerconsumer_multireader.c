@@ -44,7 +44,9 @@ void* producer() {
         sem_wait(&space);
         pthread_mutex_lock(&db);
 
-        buffer[(buf_end++) % N] = item;
+        // buffer[(buf_end++) % N] = item;
+        buffer[buf_end] = i;
+        buf_end = (buf_end + 1) % N;
 
         pthread_mutex_unlock(&db);
         sem_post(&items);
@@ -63,8 +65,10 @@ void* consumer() {
             pthread_mutex_lock(&db);    // if this is the first consumer
         pthread_mutex_unlock(&cnsmr_mutex);
         
-        item = buffer[buf_start % N];
-        buf_start++;
+        // item = buffer[buf_start % N];
+        // buf_start++;
+        item = buffer[buf_start];
+        buf_start = (buf_start + 1) % N;
 
         pthread_mutex_lock(&cnsmr_mutex);
         rc--;

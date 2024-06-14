@@ -26,9 +26,10 @@ size_t buf_start, buf_end;
 void *producer() {
     for(int i=0; i<MAX; i++) {
         pthread_mutex_lock(&mutex);
-        while(buf_end - buf_start == N)
+        while((buf_end + 1) % N == buf_start) // buffer full
             pthread_cond_wait(&condp, &mutex);
-        buffer[buf_end++ % N] = i;
+        buffer[buf_end] = i;
+        buf_end = (buf_end + 1) % N;
         pthread_cond_signal(&condc);
         pthread_mutex_unlock(&mutex);
     }
@@ -39,9 +40,10 @@ void *consumer() {
     int item;
     for(int i=0; i<MAX; i++) {
         pthread_mutex_lock(&mutex);
-        while(buf_start == buf_end)
+        while(buf_start == buf_end) // buffer empty
             pthread_cond_wait(&condc, &mutex);
-        item = buffer[buf_start++ % N];
+        item = buffer[buf_start];
+        buf_start = (buf_start + 1) % N;
         pthread_cond_signal(&condp);
         pthread_mutex_unlock(&mutex);
 

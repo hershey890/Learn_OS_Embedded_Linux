@@ -39,7 +39,8 @@ void *producer() {
         sem_wait(&empty);               // decrement empty count
         pthread_mutex_lock(&mutex);     // enter critical region
         sem_getvalue(&empty, &idx);     // insert item into buffer
-        buffer[buf_end++ % N] = item;
+        buffer[buf_end] = i;
+        buf_end = (buf_end + 1) % N;
         pthread_mutex_unlock(&mutex);   // leave critical region
         sem_post(&full);                // increment # full slots
     }
@@ -53,7 +54,8 @@ void *consumer() {
         sem_wait(&full);                // decrement full count
         pthread_mutex_lock(&mutex);     // enter critical region
         sem_getvalue(&full, &idx);      // remove item from buffer
-        item = buffer[buf_start++ % N];
+        item = buffer[buf_start];
+        buf_start = (buf_start + 1) % N;
         pthread_mutex_unlock(&mutex);   // leave critical region
         sem_post(&empty);               // increment # empty slots
         consume_item(&item);            // do something with item
